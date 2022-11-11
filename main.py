@@ -5,3 +5,4 @@ from utils import convertTxtToList
 x = StatementManager()
 
 x.read("There is car")
+print(x.getSubObj("car"))
