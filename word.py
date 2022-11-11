@@ -46,6 +46,7 @@ class Word:
                 return False
 
         print("Word created")
+        return True
 
     def getValue(self):
         return self._value
@@ -65,8 +66,18 @@ class Noun(Word):
 class SubObj(Noun):
     def __init__(self, value):
         value = value.lower()
-        super().__init__(self, value)
+        super().__init__(value)
         self.traits = list()
+
+    def __str__(self):
+        return self.getValue()
+
+    def addTrait(self, trait: str):
+        
+        # Check if trait is contraditory
+
+        for i in self.traits:
+            if 
 
 
 class Adjective(Word):
@@ -84,8 +95,6 @@ class Adjective(Word):
         Word.__init__(self, value)
         self.positivemeter = positivemeter
         self.__startSynonyms(synonyms, antonyms)
-
-        Adjective.lexic[value] = self
 
     def __startSynonyms(self, synonyms: list, antonyms: list):
         print("Starting word Synonyms")
