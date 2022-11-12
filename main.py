@@ -1,8 +1,9 @@
 from word import Word, Noun, Adjective
-from statement import StatementManager
-from utils import convertTxtToList
+from statement import Reader, StatementManager
 
-x = StatementManager()
+x = Reader()
 
-x.read("There is car")
-print(x.getSubObj("car"))
+x.read("there is a car")
+x.read("car is red")
+x.read("is car red?")
+x.read("/get subject car traits")

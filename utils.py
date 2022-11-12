@@ -4,7 +4,10 @@ def convertTxtToList(text: str):
     Returns a list: [\"abc\", \"def\", \"ghi\"]
     """
     try:
-        return text.split(" ")
+        lista = text.split(" ")
+        for i in range(lista.count("")):
+            lista.remove("")
+        return lista
     except:
         print("Incorrect format")
         return None

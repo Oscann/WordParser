@@ -32,14 +32,14 @@ class Word:
 
             case "adjective":
                 synonyms = convertTxtToList(input(
-                    "Inform some synonyms (if there are any) in the format \"abc def ghi\":\n"))
+                    "Inform some synonyms (if there are any) in the format \"abc def ghi\":\n").lower().strip())
                 antonyms = convertTxtToList(input(
-                    "Inform some antonyms (if there are any) in the format \"abc def ghi\":\n"))
+                    "Inform some antonyms (if there are any) in the format \"abc def ghi\":\n").lower().strip())
                 positivemeter = clampPositivemeter(
                     int(input("Inform the adjective positivemeter:\n")))
 
                 Adjective.lexic[word] = Adjective(
-                    word, positivemeter, synonyms, antonyms)
+                    word, positivemeter, synonyms=synonyms, antonyms=antonyms)
 
             case _:
                 print("There is no such classification: {}".format(lexicalClass))
@@ -55,46 +55,26 @@ class Word:
         self._value = value
 
 
-class Noun(Word):
-    lexic: dict = Word.lexic["noun"]
-
-    def __init__(self, value: str):
-        value = value.lower()
-        super().__init__(value)
-
-
-class SubObj(Noun):
-    def __init__(self, value):
-        value = value.lower()
-        super().__init__(value)
-        self.traits = list()
-
-    def __str__(self):
-        return self.getValue()
-
-    def addTrait(self, trait: str):
-        
-        # Check if trait is contraditory
-
-        for i in self.traits:
-            if 
-
-
 class Adjective(Word):
 
     lexic: dict = Word.lexic["adjective"]
 
-    def __init__(self, value: str, positivemeter: int, synonyms: list = [], antonyms: list = []):
+    def __init__(self, value: str, positivemeter: int, quick: bool = False, synonyms: list = [], antonyms: list = []):
         """
             PositiveMeter:
             1 - Good;
             0 - Neutral;
             -1 - Bad;
         """
-        value = value.lower()
         Word.__init__(self, value)
         self.positivemeter = positivemeter
-        self.__startSynonyms(synonyms, antonyms)
+        if not quick:
+            self.__startSynonyms(synonyms, antonyms)
+        else:
+            self.synonyms = set(synonyms)
+            self.antonyms = set(antonyms)
+            Adjective.lexic[value] = self
+            print(f"Quick Creation done for {value}")
 
     def __startSynonyms(self, synonyms: list, antonyms: list):
         print("Starting word Synonyms")
@@ -108,17 +88,13 @@ class Adjective(Word):
             self.addAntonym(antonym)
 
     def addSynonym(self, synonym: str):
-
         synonym = synonym.lower()  # Remove after dev
-
+        print(Adjective.lexic.keys())
         if synonym not in Adjective.lexic.keys():
             print(f"{synonym} doesn't exist in our lexic")
             print("Starting quick creation")
-            Adjective(
-                value=synonym,
-                positivemeter=self.positivemeter,
-                antonyms=self.antonyms
-            )
+            Adjective.lexic[synonym] = Adjective(value=synonym, positivemeter=self.positivemeter,
+                                                 quick=True, antonyms=self.antonyms)
 
         synonym: Adjective = Adjective.lexic[synonym]
 
@@ -145,11 +121,8 @@ class Adjective(Word):
         if antonym not in Adjective.lexic.keys():
             print(f"{antonym} doesn't exist in our lexic")
             print("Starting quick creation")
-            Adjective(
-                value=antonym,
-                positivemeter=-self.positivemeter,
-                antonyms=self.synonyms
-            )
+            Adjective.lexic[antonym] = Adjective(value=antonym, positivemeter=-self.positivemeter,
+                                                 quick=True, synonyms=self.synonyms)
 
         antonym: Adjective = Adjective.lexic[antonym]
 
@@ -176,5 +149,34 @@ class Adjective(Word):
         return self.antonyms
 
 
-class Verb(Word):
-    lexic: dict = Word.lexic["verb"]
+class Noun(Word):
+    lexic: dict = Word.lexic["noun"]
+
+    def __init__(self, value: str):
+        value = value.lower()
+        super().__init__(value)
+
+
+class SubObj(Noun):
+    def __init__(self, value):
+        value = value.lower()
+        super().__init__(value)
+        self.traits = list()
+
+    def __str__(self):
+        return self.getValue()
+
+    def addTrait(self, trait: str):
+
+        # Check if trait is contraditory
+
+        for i in self.traits:
+            if trait in Adjective.lexic[i].antonyms:
+                print(
+                    f"It is impossible for {self.getValue()} be {trait} because {self.getValue()} has an antonym of such trait.")
+                return
+
+        self.traits.append(trait)
+
+    def getTraits(self):
+        return self.traits
