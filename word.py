@@ -1,5 +1,7 @@
 from utils import clampPositivemeter, convertTxtToList
 
+print
+
 
 class Word:
 
@@ -11,22 +13,19 @@ class Word:
         "adjective": {
 
         },
-
-        "verb": {
-
-        }
     }
 
     def __init__(self, value: str):
         self.setValue(value)
 
-    def createWord(word: str, lexicalClass: str):
+    def createWord(word: str, morphologicalClass: str):
         """
             Receives a word and returns a boolean indicating the success
         """
 
-        print("Starting word creation for {} as {}".format(word, lexicalClass))
-        match lexicalClass:
+        print("Starting word creation for {} as {}".format(
+            word, morphologicalClass))
+        match morphologicalClass:
             case "noun":
                 Noun.lexic[word] = Noun(word)
 
@@ -42,7 +41,8 @@ class Word:
                     word, positivemeter, synonyms=synonyms, antonyms=antonyms)
 
             case _:
-                print("There is no such classification: {}".format(lexicalClass))
+                print("There is no such classification: {}".format(
+                    morphologicalClass))
                 return False
 
         print("Word created")
@@ -74,10 +74,10 @@ class Adjective(Word):
             self.synonyms = set(synonyms)
             self.antonyms = set(antonyms)
             Adjective.lexic[value] = self
-            print(f"Quick Creation done for {value}")
+            print(f"Quick creation done for {value}")
 
     def __startSynonyms(self, synonyms: list, antonyms: list):
-        print("Starting word Synonyms")
+        print("Starting word synonyms/antonyms")
         self.synonyms = set()
         self.antonyms = set()
 
@@ -89,7 +89,6 @@ class Adjective(Word):
 
     def addSynonym(self, synonym: str):
         synonym = synonym.lower()  # Remove after dev
-        print(Adjective.lexic.keys())
         if synonym not in Adjective.lexic.keys():
             print(f"{synonym} doesn't exist in our lexic")
             print("Starting quick creation")
@@ -166,6 +165,39 @@ class SubObj(Noun):
     def __str__(self):
         return self.getValue()
 
+    def patch(self, trait: str):
+        if trait not in Adjective.lexic.keys():
+            print("There is no such adjective in the lexic")
+            return
+
+        traitAdjective = Adjective.lexic[trait]
+
+        for i in traitAdjective.antonyms:
+            if i in self.traits:
+                self.remove(i)
+
+        self.traits.append(trait)
+
+        print("Trait patched")
+
+    def remove(self, trait: str):
+        if trait not in Adjective.lexic.keys():
+            print("There is no such adjective in the lexic")
+            return
+        elif trait not in self.traits:
+            print(f"This subject is not '{trait}'")
+            return
+
+        traitAdjective = Adjective.lexic[trait]
+
+        self.traits.remove(trait)
+
+        for i in traitAdjective.synonyms:
+            if i in self.traits:
+                self.traits.remove(i)
+
+        print(f"Removed {trait} and it's synonyms")
+
     def addTrait(self, trait: str):
 
         # Check if trait is contraditory
@@ -175,6 +207,9 @@ class SubObj(Noun):
                 print(
                     f"It is impossible for {self.getValue()} be {trait} because {self.getValue()} has an antonym of such trait.")
                 return
+        if trait in self.traits:
+            print(f"{self.getValue()} already is {trait}")
+            return
 
         self.traits.append(trait)
 

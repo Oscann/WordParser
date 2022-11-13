@@ -1,4 +1,5 @@
 import re
+import time
 from utils import convertTxtToList
 from word import SubObj, Word, Noun, Adjective
 
@@ -10,7 +11,30 @@ class Reader:
         self.statement = StatementManager()
         self.command = CommandManager()
 
-    def read(self, text):
+    def execute(self):
+        print("""
+        This program is case insensitive; follow the following (no paradox intended) syntax to 
+        do any stuff:
+        existence: There is a <subject>;
+        declaration: <subject> is <adjective>;
+        interrogation: Is <subject> <adjective>?;
+
+        To use any command, type '/<command-name> <...arguments>'
+
+        P.S.: don't know the commands? good luck ;)
+        """)
+
+        time.sleep(5)
+
+        while True:
+            entry = input(">>> ").lower().strip()
+
+            if entry == "exit()":
+                break
+            else:
+                self.read(entry)
+
+    def read(self, text: str):
         text = text.lower().strip()
 
         pattern = None
@@ -58,7 +82,7 @@ class Manager:
 
         func(self, *args)
 
-    def _tokenize(self, pattern, text):
+    def _tokenize(self, pattern: str, text: str):
         pass
 
     def getSubObj(self, value: str):
@@ -74,9 +98,17 @@ class Manager:
 
 class StatementManager(Manager):
 
+    def __init__(self):
+        self.__startLexic()
+
     def __processExistence(self, noun: str):
-        self.createWord(noun, "noun")
-        self.createObj(noun)
+        if noun not in Noun.lexic:
+            self.createWord(noun, "noun")
+
+        if noun not in super().getObjs():
+            self.createObj(noun)
+        else:
+            print("This subject already exists")
 
     def __processDeclaration(self, subject: str, adjective: str):
         if subject not in self.getObjs():
@@ -91,7 +123,7 @@ class StatementManager(Manager):
 
         subobj.addTrait(adjective)
 
-    def __processInterrogation(self, subject, adjective):
+    def __processInterrogation(self, subject: str, adjective: str):
         result = False
 
         if subject not in self.getObjs():
@@ -147,6 +179,16 @@ class StatementManager(Manager):
     def createObj(self, value: str):
         Manager._objs.append(SubObj(value))
 
+    def __startLexic(self):
+
+        Adjective.lexic["red"] = Adjective("red", 0, synonyms=["scarlet"])
+        Adjective.lexic["blue"] = Adjective("blue", 0)
+        Adjective.lexic["good"] = Adjective(
+            "good", 1, synonyms=["nice"], antonyms=["bad"])
+
+        import os
+        os.system("cls")
+
 
 class CommandManager(Manager):
 
@@ -182,8 +224,31 @@ class CommandManager(Manager):
 
         print(f"{word}'s {field}: {data}")
 
+    def __processGetLexic(self, lexic: str):
+        print(lexic)
+        if lexic in Word.lexic.keys():
+            print(Word.lexic[lexic])
+        else:
+            print("There is no such lexic")
+
+    def __processFixTrait(self, action: str, subject: str, trait: str):
+        subj = self.getSubObj(subject)
+
+        if subj == None:
+            print("Inexistent subject")
+            return
+
+        if action == "patch":
+            subj.patch(trait)
+        elif action == "remove":
+            subj.remove(trait)
+        else:
+            print("Invalid action: try 'patch' or 'remove'")
+
     syntax: dict = {
-        "get_field": (f"/get\s{WORD}\s{WORD}\s{WORD}", __processGetField)
+        "get_field": (f"/get\s{WORD}\s{WORD}\s{WORD}", __processGetField),
+        "lexic": (f"/lexic\s{WORD}", __processGetLexic),
+        "fix_trait": (f"/fix_trait\s{WORD}\s{WORD}\s{WORD}", __processFixTrait)
     }
 
     def _tokenize(self, pattern: str, text: str):
@@ -192,6 +257,14 @@ class CommandManager(Manager):
         match(pattern):
             case "get_field":
                 argumentTokens = convertTxtToList(text[4:])
+                if len(argumentTokens) == 3:
+                    args = tuple(argumentTokens)
+            case "lexic":
+                argumentTokens = convertTxtToList(text[7:])
+                if len(argumentTokens) == 1:
+                    args = tuple(argumentTokens)
+            case "fix_trait":
+                argumentTokens = convertTxtToList(text[11:])
                 if len(argumentTokens) == 3:
                     args = tuple(argumentTokens)
             case _:
